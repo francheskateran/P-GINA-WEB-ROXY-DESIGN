@@ -3,7 +3,7 @@ La presente plataforma web surge de la necesidad de modernizar y digitalizar el 
 
 ## HERRAMIENTAS DE SOFTWARE GRATUITAS UTILIZADAS EN EL DESARROLLO E IMPLEMENTACIÓN DE LA PLATAFORMA ROXY DESIGN
 
-*Python
-*CSS
-*Java
-*MySQL
+* Python
+* CSS
+* Java
+* MySQL
