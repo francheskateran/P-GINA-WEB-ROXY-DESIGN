@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>RoxyDesign - {{ nombre_categoria }}</title>
+
+<style>
+:root {
+    /* Variables de color dinámicas */
+    --primary: {{ site_config.color_principal | default('#2b8a78') }};
+    --bg: {{ site_config.color_fondo | default('#f4f4f4') }};
+}
+
+body{
+    margin:0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+}
+
+.titulo{
+    text-align:center;
+    padding:40px;
+    background:white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.titulo h1 {
+    margin: 0;
+    color: var(--primary);
+    text-transform: capitalize;
+}
+
+.btn-volver {
+    display: inline-block;
+    margin-top: 15px;
+    text-decoration: none;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.btn-volver:hover {
+    color: var(--primary);
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+    gap:25px;
+    padding:40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Enlace de la tarjeta */
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.card img{
+    width:100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.card h3{
+    font-size:18px;
+    margin:15px 0 5px 0;
+    color: #333;
+}
+
+.card p {
+    font-weight: bold;
+    color: var(--primary);
+    margin: 5px 0;
+    font-size: 1.1em;
+}
+
+.btn-detalle {
+    margin-top: 10px;
+    display: inline-block;
+    font-size: 12px;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 5px 15px;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+.card:hover .btn-detalle {
+    background: var(--primary);
+    color: white;
+}
+</style>
+
+</head>
+<body>
+
+<div class="titulo">
+    <h1>{{ nombre_categoria }}</h1>
+    <a href="{{ url_for('ver_todas_categorias') }}" class="btn-volver">← Volver a todas las categorías</a>
+</div>
+
+<div class="grid">
+    {% for p in productos %}
+    {# El enlace lleva al detalle específico de este producto o a la vista de categoría detalle #}
+    <a href="{{ url_for('ver_categoria_detalle', nombre_categoria=nombre_categoria) }}" class="card-link">
+        <div class="card">
+            <img src="{{ url_for('static', filename='img/' + p.imagen_url) }}" 
+                 onerror="this.src='https://via.placeholder.com/250x220?text=RoxyDesign'" 
+                 alt="{{ p.NombreP }}">
+            <div>
+                <h3>{{ p.NombreP }}</h3>
+                <p>$ {{ p.Precio }}</p>
+                <span class="btn-detalle">Ver detalles</span>
+            </div>
+        </div>
+    </a>
+    {% else %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+        <p style="color: #888; font-size: 18px;">No hay productos disponibles en esta categoría por ahora.</p>
+        <a href="{{ url_for('inicio') }}" class="btn-volver">Regresar al catálogo general</a>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

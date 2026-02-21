@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>RoxyDesign - Seleccionar Categoría</title>
+    <style>
+        :root {
+            /* Colores dinámicos desde la configuración del administrador */
+            --primary: {{ site_config.color_principal | default('#2b8a78') }};
+            --bg: {{ site_config.color_fondo | default('#f4f4f4') }};
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 50px 20px;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        li {
+            margin-bottom: 15px;
+        }
+
+        .cat-link {
+            display: block;
+            padding: 15px 20px;
+            background: #f9f9f9;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .cat-link:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-volver {
+            margin-top: 25px;
+            display: inline-block;
+            text-decoration: none;
+            color: #888;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .btn-volver:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Nuestras Colecciones</h2>
+
+        <ul>
+            {# Ajustado para manejar los objetos de categoría del nuevo Main.py #}
+            {% for cat in lista_categorias %}
+                <li>
+                    <a href="{{ url_for('ver_categoria', id_categoria=cat.id) }}" class="cat-link">
+                        {{ cat.nombre }}
+                    </a>
+                </li>
+            {% else %}
+                <p style="color: #999;">No hay categorías disponibles todavía.</p>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('inicio') }}" class="btn-volver">← Volver al Inicio</a>
+    </div>
+
+</body>
+</html>

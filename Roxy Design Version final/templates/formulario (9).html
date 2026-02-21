@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RoxyDesign - Acceso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='formulario.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .forgot-password {
+            display: block; width: 100%; text-align: center; margin: 5px 0 15px 0;
+            font-size: 13px; color: #2b8a78; text-decoration: none; cursor: pointer;
+        }
+        .no-transition {
+            transition: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container {{ 'active no-transition' if modo == 'registro' }}" id="container">
+
+        <div class="container-form">
+            <form class="sign-in" action="/login" method="POST">
+                <h2>Iniciar Sesión</h2>
+                <div class="social-networks">
+                    <ion-icon name="logo-facebook"></ion-icon>
+                    <ion-icon name="logo-twitter"></ion-icon>
+                    <ion-icon name="logo-instagram"></ion-icon>
+                    <ion-icon name="logo-tiktok"></ion-icon>
+                </div>
+                <span>Use su cuenta registrada</span>
+                <div class="container-input">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" name="nombre" placeholder="Correo o Usuario" required />
+                </div>
+                <div class="container-input">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" name="password" placeholder="Contraseña" required />
+                </div>
+                <a onclick="abrirRecuperacion()" class="forgot-password">¿Olvidó su contraseña?</a>
+                <button type="submit" class="button">Iniciar Sesión</button>
+            </form>
+        </div>
+
+        <div class="container-form">
+            <form class="sign-up" id="form-registro" action="/registro" method="POST">
+                <h2>Registrarse</h2>
+                <div class="social-networks">
+                    <ion-icon name="logo-facebook"></ion-icon>
+                    <ion-icon name="logo-twitter"></ion-icon>
+                    <ion-icon name="logo-instagram"></ion-icon>
+                    <ion-icon name="logo-tiktok"></ion-icon>
+                </div>
+                <span>Cree una cuenta segura</span>
+
+                <div class="container-input">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <input type="text" name="Nombre" id="input-nombre" placeholder="Nombre de usuario"
+                           required minlength="4" value="{{ Nombre if Nombre else '' }}" />
+                </div>
+
+                <div class="container-input">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="email" name="email" id="input-email" placeholder="Email (Ej: @gmail.com)"
+                           required value="{{ email if email else '' }}" />
+                </div>
+
+                <div class="container-input">
+                    <ion-icon name="call-outline"></ion-icon>
+                    <input type="text" name="numeroT" id="input-telefono" placeholder="Teléfono (Ej: 04141234567)" 
+                           required 
+                           pattern="^(0414|0412|0424|0416|0426|0212)\d{7}$"
+                           value="{{ numeroT if numeroT else '' }}" />
+                </div>
+
+                <div class="container-input">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" name="password" id="input-pass" placeholder="Contraseña (A-Z, 0-9, 8+)" required />
+                </div>
+                <button type="submit" class="button">Registrarse</button>
+            </form>
+        </div>
+
+        <div class="container-welcome">
+            <div class="welcome-sign-up welcome">
+                <h3>¡Bienvenido!</h3>
+                <p>Ingrese sus datos para usar todas las funciones</p>
+                <button class="button" id="btn-sign-up">Registrarse</button>
+            </div>
+            <div class="welcome-sign-in welcome">
+                <h3>¡Hola!</h3>
+                <p>¿Ya tienes una cuenta? Inicia sesión aquí</p>
+                <button class="button" id="btn-sign-in">Iniciar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='formulario.js') }}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script>
+        // Función maestra para disparar burbujas
+        function dispararBurbuja(idInput, mensaje) {
+            const input = document.getElementById(idInput);
+            if (input) {
+                input.setCustomValidity(mensaje);
+                input.reportValidity();
+                input.focus();
+                input.oninput = function() { this.setCustomValidity(""); };
+            }
+        }
+
+        // VALIDACIÓN TOTAL ANTES DE ENVIAR (Evita el refresco para todos los campos)
+        document.getElementById('form-registro').onsubmit = function(e) {
+            const nombre = document.getElementById('input-nombre');
+            const email = document.getElementById('input-email');
+            const tel = document.getElementById('input-telefono');
+            const pass = document.getElementById('input-pass');
+            
+            // 1. Validar Nombre
+            if (nombre.value.trim().length < 4) {
+                e.preventDefault();
+                dispararBurbuja('input-nombre', "El nombre de usuario debe tener al menos 4 caracteres.");
+                return false;
+            }
+
+            // 2. Validar Email
+            const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!regexEmail.test(email.value)) {
+                e.preventDefault();
+                dispararBurbuja('input-email', "Por favor, ingresa un correo electrónico válido.");
+                return false;
+            }
+
+            // 3. Validar Teléfono (Regex estricto 11 dígitos)
+            const regexTel = /^(0414|0412|0424|0416|0426|0212)\d{7}$/;
+            if (!regexTel.test(tel.value)) {
+                e.preventDefault();
+                dispararBurbuja('input-telefono', "Debe empezar por un prefijo válido (0414, 0412, etc.) y tener exactamente 11 dígitos.");
+                return false;
+            }
+
+            // 4. Validar Contraseña
+            if (pass.value.length < 8) {
+                e.preventDefault();
+                dispararBurbuja('input-pass', "La contraseña debe tener al menos 8 caracteres.");
+                return false;
+            }
+        };
+
+        window.onload = function() {
+            const container = document.getElementById('container');
+            const modo = "{{ modo }}";
+
+            if (modo === "registro") {
+                container.classList.add('active');
+                setTimeout(() => { container.classList.remove('no-transition'); }, 100);
+            }
+
+            // Capturar errores que vienen del SERVIDOR (como "usuario ya existe")
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        const msg = "{{ message }}".toLowerCase();
+                        if (msg.includes("usuario") || msg.includes("existe")) {
+                            dispararBurbuja('input-nombre', "{{ message }}");
+                        } else if (msg.includes("correo") || msg.includes("email")) {
+                            dispararBurbuja('input-email', "{{ message }}");
+                        } else if (msg.includes("teléfono") || msg.includes("dígitos")) {
+                            dispararBurbuja('input-telefono', "{{ message }}");
+                        } else {
+                            dispararBurbuja('input-pass', "{{ message }}");
+                        }
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        };
+
+        function abrirRecuperacion() {
+            Swal.fire({
+                title: 'Recuperar Contraseña',
+                html: '<input type="text" id="rec-nombre" class="swal2-input" placeholder="Nombre de Usuario"><input type="email" id="rec-email" class="swal2-input" placeholder="Correo Electrónico">',
+                confirmButtonText: 'Recuperar',
+                showCancelButton: true,
+                preConfirm: () => {
+                    const nombre = document.getElementById('rec-nombre').value;
+                    const email = document.getElementById('rec-email').value;
+                    if (!nombre || !email) {
+                        Swal.showValidationMessage('Por favor llene ambos campos');
+                    }
+                    return { nombre: nombre, email: email };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ url_for('recuperar_password') }}";
+                    const n = document.createElement('input'); n.type='hidden'; n.name='Nombre'; n.value=result.value.nombre;
+                    const e = document.createElement('input'); e.type='hidden'; e.name='email'; e.value=result.value.email;
+                    form.appendChild(n); form.appendChild(e);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

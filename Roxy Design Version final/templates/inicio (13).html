@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ site_config.titulo_hero }} - Inicio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+
+    <style>
+        :root {
+            --primary: {{ site_config.color_principal }};
+            --bg: {{ site_config.color_fondo }};
+            --dark: #1a1a1a;
+            --white: #ffffff;
+        }
+
+        body {
+            margin:0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: #333;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: var(--white);
+            padding: 10px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); text-decoration: none; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #333; font-weight: 500; transition: 0.3s; position: relative; }
+        .nav-links a:hover { color: var(--primary); }
+
+        .btn-nav {
+            padding: 8px 15px;
+            background: var(--primary);
+            color: white !important;
+            border-radius: 20px;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 80px 10%;
+            min-height: 80vh;
+        }
+        .hero-text { max-width: 50%; }
+        .hero-text h1 { font-size: 3.5rem; color: var(--dark); line-height: 1.1; margin-bottom: 20px; }
+        .hero-text p { font-size: 1.2rem; color: #666; margin-bottom: 30px; }
+        .btn-hero {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-hero:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        .hero-img {
+            max-width: 45%;
+            border-radius: 20px;
+            box-shadow: 20px 20px 0px var(--primary);
+        }
+        .hero-img img { width: 100%; border-radius: 20px; }
+
+        /* PRODUCTOS DESTACADOS */
+        .section-title { text-align: center; margin-top: 80px; font-size: 2rem; color: var(--dark); }
+        .grid-productos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 50px 10%;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: 0.3s;
+            position: relative;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+        .card h3 { margin: 10px 0; font-size: 1.1rem; }
+        .card .price { color: var(--primary); font-weight: 700; font-size: 1.2rem; }
+        .card .stock { font-size: 0.8rem; color: #777; margin-bottom: 10px; display: block; }
+
+        .admin-controls {
+            position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;
+        }
+        .btn-icon { background: rgba(255,255,255,0.9); border: none; padding: 5px; cursor: pointer; border-radius: 5px; }
+
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px;
+            position: relative;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .preview-img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 1px dashed #ccc; margin-top: 5px; }
+
+        .bcv-badge {
+            background: #222; color: #f1c40f; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;
+            margin-left: 10px; font-weight: bold;
+        }
+        
+        .notification-dot {
+            height: 10px; width: 10px; background-color: red; border-radius: 50%;
+            display: inline-block; position: absolute; top: 0; right: -5px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="logo">{{ site_config.titulo_hero }}</a>
+        <div class="nav-links">
+            <a href="/">Inicio</a>
+            <a href="{{ url_for('ver_todas_categorias') }}">Catálogo</a>
+
+            {% if session.usuario %}
+                <a href="{{ url_for('ver_carrito') }}">
+                    Carrito <ion-icon name="cart-outline"></ion-icon>
+                    {% if notificacion_pago > 0 %}
+                        <span class="notification-dot"></span>
+                    {% endif %}
+                </a>
+                {% if session.es_admin %}
+                    <a href="{{ url_for('admin_dashboard') }}">Panel Admin</a>
+                    <a href="#" onclick="abrirModalConfig()">Configuración</a>
+                    <a href="#" onclick="abrirModalProducto()" class="btn-nav">+ Nuevo Producto</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" style="color:red;">Salir</a>
+            {% else %}
+                <a href="{{ url_for('form_acceso') }}" class="btn-nav">Ingresar</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <script>
+                    Swal.fire({ icon: '{{ "success" if category == "success" else "error" }}', title: '{{ message }}', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                </script>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if notificacion_pago > 0 %}
+    <div style="background-color: #d4edda; color: #155724; padding: 10px; text-align: center;">
+        <b>¡Atención!</b> Tienes {{ notificacion_pago }} pedido(s) confirmado(s) por el administrador. 
+        <a href="{{ url_for('ver_carrito') }}" style="font-weight:bold; color: inherit;">Ir al carrito para pagar</a>.
+    </div>
+    {% endif %}
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>{{ site_config.titulo_hero }}</h1>
+            <p>{{ site_config.texto_hero }}</p>
+            <div style="margin-bottom: 20px;">
+                <span class="bcv-badge">Tasa BCV: {{ site_config.tasa_bcv }} Bs/$</span>
+            </div>
+            <a href="{{ url_for('ver_todas_categorias') }}" class="btn-hero">Ver Catálogo</a>
+        </div>
+        <div class="hero-img">
+            <img src="{{ url_for('static', filename='img/' + site_config.hero_img) }}"
+                 onerror="this.src='https://via.placeholder.com/500x600?text=RoxyDesign'" alt="Hero">
+        </div>
+    </section>
+
+    <h2 class="section-title">Destacados</h2>
+    <div class="grid-productos">
+        {% for p in productos %}
+        <div class="card">
+            {% if session.es_admin %}
+            <div class="admin-controls">
+                <button class="btn-icon" onclick='editarProducto({{ p|tojson }})'>✏️</button>
+                <a href="{{ url_for('eliminar_producto', id_prod=p.idP) }}" class="btn-icon" onclick="return confirm('¿Eliminar?')">🗑️</a>
+            </div>
+            {% endif %}
+
+            <img src="{{ url_for('static', filename='img/' + (p.imagen_url if p.imagen_url else 'default.png')) }}">
+            <h3>{{ p.NombreP }}</h3>
+            <span class="stock">Disponible: {{ p.stock }}</span>
+            <p class="price">$ {{ p.Precio }}</p>
+
+            <form action="{{ url_for('agregar_al_carrito', producto_id=p.idP) }}" method="POST">
+                <button type="submit" class="btn-hero" style="padding: 8px 20px; font-size: 0.9rem;">Agregar</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="modalProducto" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Nuevo Producto</h2>
+            <form action="{{ url_for('guardar_producto') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="prodId">
+                <input type="hidden" name="imagen_actual" id="prodImgActual">
+
+                <div class="form-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" name="nombre" id="prodNombre" required>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 10px;">
+                    <div style="flex:1;">
+                        <label>Precio ($)</label>
+                        <input type="text" name="precio" id="prodPrecio" placeholder="$ 0.00" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Stock</label>
+                        <input type="number" name="stock" id="prodStock" placeholder="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select name="categoria" id="prodCat" required>
+                        {% for c in lista_categorias %}
+                            <option value="{{ c.id }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="border: 2px dashed #ccc; padding: 10px; text-align: center;">
+                    <label>Imagen del Producto</label>
+                    <p style="font-size: 12px; color: #666;">Haz clic y pega (Ctrl+V) o selecciona archivo.</p>
+                    <input type="file" name="imagen" id="prodInputFile" accept="image/*" onchange="previewImage(this)">
+                    <br>
+                    <img id="preview" class="preview-img" src="" style="display:none;">
+                </div>
+
+                <button type="submit" class="btn-hero" style="width: 100%; border:none;">Guardar Producto</button>
+                <button type="button" onclick="cerrarModales()" style="width: 100%; margin-top: 10px; background: #ddd; border: none; padding: 10px; border-radius: 20px; cursor: pointer;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalConfig" class="modal">
+        <div class="modal-content">
+            <h2>Configuración del Sitio</h2>
+            <form action="{{ url_for('actualizar_config') }}" method="POST" enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <label>Tasa BCV (Bs/$)</label>
+                    <input type="number" step="0.01" name="tasa_bcv" value="{{ site_config.tasa_bcv }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Imagen Derecha (Hero)</label>
+                    <input type="file" name="hero_img">
+                    <input type="hidden" name="hero_img_actual" value="{{ site_config.hero_img }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Título Principal</label>
+                    <input type="text" name="titulo_hero" value="{{ site_config.titulo_hero }}">
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo</label>
+                    <input type="text" name="texto_hero" value="{{ site_config.texto_hero }}">
+                </div>
+                <div class="form-group">
+                    <label>Color Principal</label>
+                    <input type="color" name="color_principal" value="{{ site_config.color_principal }}" style="height: 40px;">
+                </div>
+                <div class="form-group">
+                    <label>Color de Fondo</label>
+                    <input type="color" name="color_fondo" value="{{ site_config.color_fondo }}" style="height: 40px;">
+                </div>
+
+                <button type="submit" class="btn-hero" style="width: 100%; border:none;">Actualizar Diseño</button>
+                <button type="button" onclick="cerrarModales()" style="width: 100%; margin-top: 10px; background: #ddd; border: none; padding: 10px; border-radius: 20px; cursor: pointer;">Cerrar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function cerrarModales() {
+            document.getElementById('modalProducto').style.display = 'none';
+            document.getElementById('modalConfig').style.display = 'none';
+        }
+
+        function abrirModalProducto() {
+            document.getElementById('prodId').value = '';
+            document.getElementById('prodNombre').value = '';
+            document.getElementById('prodPrecio').value = '';
+            document.getElementById('prodStock').value = '0';
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('modalTitle').innerText = 'Nuevo Producto';
+            document.getElementById('modalProducto').style.display = 'flex';
+        }
+
+        function abrirModalConfig() {
+            document.getElementById('modalConfig').style.display = 'flex';
+        }
+
+        function editarProducto(data) {
+            document.getElementById('prodId').value = data.idP;
+            document.getElementById('prodNombre').value = data.NombreP;
+            document.getElementById('prodPrecio').value = data.Precio;
+            document.getElementById('prodStock').value = data.stock;
+            document.getElementById('prodCat').value = data.categoria_id;
+            document.getElementById('prodImgActual').value = data.imagen_url;
+
+            if(data.imagen_url) {
+                document.getElementById('preview').src = "/static/img/" + data.imagen_url;
+                document.getElementById('preview').style.display = 'block';
+            }
+
+            document.getElementById('modalTitle').innerText = 'Editar Producto';
+            document.getElementById('modalProducto').style.display = 'flex';
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        document.addEventListener('paste', function(event) {
+            if(document.getElementById('modalProducto').style.display === 'flex'){
+                const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+                for (let index in items) {
+                    const item = items[index];
+                    if (item.kind === 'file') {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event){
+                            document.getElementById('preview').src = event.target.result;
+                            document.getElementById('preview').style.display = 'block';
+                        };
+                        reader.readAsDataURL(blob);
+                        const fileInput = document.getElementById('prodInputFile');
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(blob);
+                        fileInput.files = dataTransfer.files;
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Imagen pegada', showConfirmButton: false, timer: 2000 });
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

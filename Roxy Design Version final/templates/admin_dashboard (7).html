@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --primary: {{ site_config.color_principal }}; --dark: #1a1a1a; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; display: flex; background: #f0f2f5; height: 100vh; }
+
+        .sidebar { width: 250px; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { color: var(--primary); margin-top: 0; }
+        .menu-item { color: #ccc; text-decoration: none; padding: 15px 10px; border-bottom: 1px solid #333; display: block; }
+        .menu-item:hover { color: white; background: #333; }
+
+        .content { flex: 1; padding: 30px; overflow-y: auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+
+        .btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; color: white; font-size: 0.8rem; margin-right: 5px; }
+        .btn-edit { background: #f39c12; }
+        .btn-del { background: #e74c3c; } /* Para Borrar Permanente */
+        .btn-add { background: var(--primary); padding: 10px 15px; font-size: 1rem; }
+        .btn-info { background: #3498db; }
+        .btn-check { background: #27ae60; }
+        .btn-cancel { background: #c0392b; } /* Para Cancelar Estado */
+
+        .badge { padding: 3px 8px; border-radius: 10px; font-size: 12px; color: white; }
+        .bg-pend { background: #e67e22; }
+        .bg-espera { background: #3498db; }
+        .bg-conf { background: #27ae60; }
+        .bg-canc { background: #7f8c8d; }
+
+        .inline-form { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .input-std { padding: 10px; border: 1px solid #ddd; border-radius: 5px; flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Roxy Admin</h2>
+        <a href="{{ url_for('inicio') }}" class="menu-item">← Volver a la Tienda</a>
+        <a href="#" class="menu-item" onclick="mostrarSeccion('ordenes')">Pedidos</a>
+        <a href="#" class="menu-item" onclick="mostrarSeccion('categorias')">Categorías</a>
+    </div>
+
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div style="padding: 10px; margin-bottom: 20px; background: {{ '#d4edda' if category == 'success' else '#f8d7da' }}; border-radius: 5px;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div id="sec-categorias" class="card" style="display: none;">
+            <h3>Gestión de Categorías</h3>
+            <form action="{{ url_for('gestionar_categorias') }}" method="POST" class="inline-form">
+                <input type="hidden" name="accion" value="crear">
+                <input type="text" name="nombre" class="input-std" placeholder="Nombre nueva categoría" required>
+                <button type="submit" class="btn btn-add">Crear Categoría</button>
+            </form>
+
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    {% for cat in categorias %}
+                    <tr>
+                        <td>{{ cat.id }}</td>
+                        <td>{{ cat.nombre }}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editarCat('{{ cat.id }}', '{{ cat.nombre }}')">Editar</button>
+                            <form action="{{ url_for('gestionar_categorias') }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Borrar?');">
+                                <input type="hidden" name="accion" value="eliminar">
+                                <input type="hidden" name="id" value="{{ cat.id }}">
+                                <button type="submit" class="btn btn-del">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="sec-ordenes" class="card">
+            <h3>Pedidos Recientes</h3>
+            <table>
+                <thead>
+                    <tr><th>#ID</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for o in ordenes %}
+                    <tr>
+                        <td>#{{ o.idO }}</td>
+                        <td>{{ o.cliente }}</td>
+                        <td>$ {{ o.total }}</td>
+                        <td>
+                            <span class="badge {{ 'bg-pend' if o.status == 'Pendiente' else 'bg-espera' if o.status == 'Esperando Pago' else 'bg-conf' if o.status == 'Confirmado' else 'bg-canc' }}">
+                                {{ o.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-info" onclick="verInfoOrden('{{ o.idO }}')">ℹ️ Info</button>
+
+                            {% if o.status == 'Pendiente' %}
+                                <form action="{{ url_for('admin_aprobar_orden', id_orden=o.idO) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-check" title="Aprobar para Pago">✅ Aprobar</button>
+                                </form>
+                            {% endif %}
+
+                            {% if o.status != 'Cancelado' %}
+                                <form action="{{ url_for('admin_cancelar_orden', id_orden=o.idO) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Marcar este pedido como CANCELADO? El stock será devuelto.');">
+                                    <button type="submit" class="btn btn-cancel" title="Solo Cancelar">🚫 Cancelar</button>
+                                </form>
+                            {% endif %}
+
+                             <form action="{{ url_for('admin_eliminar_orden', id_orden=o.idO) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿BORRAR COMPLETAMENTE este pedido de la lista? Esta acción no se puede deshacer.');">
+                             <button type="submit" class="btn btn-del" title="Borrar Permanentemente">🗑️ Borrar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5">No hay pedidos registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function mostrarSeccion(id) {
+            document.getElementById('sec-ordenes').style.display = 'none';
+            document.getElementById('sec-categorias').style.display = 'none';
+            document.getElementById('sec-' + id).style.display = 'block';
+        }
+
+        function editarCat(id, nombre) {
+            Swal.fire({
+                title: 'Editar Categoría',
+                input: 'text',
+                inputValue: nombre,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                preConfirm: (val) => {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = "{{ url_for('gestionar_categorias') }}";
+                    form.innerHTML = `<input type="hidden" name="accion" value="editar">
+                                      <input type="hidden" name="id" value="${id}">
+                                      <input type="hidden" name="nombre" value="${val}">`;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        function verInfoOrden(id) {
+            fetch(`/admin/info_orden/${id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if(data.error) return;
+
+                    let htmlProductos = '<ul style="text-align:left;">';
+                    data.productos.forEach(p => {
+                        htmlProductos += `<li>${p.cantidad}x ${p.NombreP} ($${p.precio_historico})</li>`;
+                    });
+                    htmlProductos += '</ul>';
+
+                    let htmlPago = '';
+                    if(data.pago) {
+                        htmlPago = `
+                            <div style="background: #e8f6f3; padding: 10px; margin-top: 10px; border: 1px solid #27ae60; border-radius: 5px;">
+                                <h4 style="color: #27ae60; margin-top:0;">Detalles del Pago</h4>
+                                <p><b>Banco:</b> ${data.pago.bank_name}</p>
+                                <p><b>Ref:</b> ${data.pago.Referencia_pago}</p>
+                                <p><b>Cédula:</b> ${data.pago.id_Numero}</p>
+                                <p><b>Teléfono:</b> ${data.pago.Numero_Telefono}</p>
+                                <div style="text-align:center; margin-top:5px;">
+                                    <a href="/static/img/${data.pago.pago_imagen_url}" target="_blank">
+                                        <img src="/static/img/${data.pago.pago_imagen_url}" style="max-width: 100%; height: 150px; object-fit: contain; border: 1px solid #ccc;">
+                                    </a>
+                                    <br><small>(Clic para ver imagen completa)</small>
+                                </div>
+                            </div>
+                        `;
+                    } else if (data.info.status === 'Cancelado') {
+                         htmlPago = `<div style="background: #fadbd8; padding: 10px; margin-top: 10px; color: #c0392b;">Pedido Cancelado</div>`;
+                    } else {
+                        htmlPago = `<div style="padding: 10px; margin-top: 10px; color: #888;"><i>Sin pago reportado aún</i></div>`;
+                    }
+
+                    Swal.fire({
+                        title: `Orden #${id}`,
+                        html: `
+                            <div style="text-align:left; background: #f9f9f9; padding: 10px; border-radius:5px; max-height: 400px; overflow-y: auto;">
+                                <h4>Datos del Cliente</h4>
+                                <p><b>Nombre:</b> ${data.info.nombre}</p>
+                                <p><b>Email:</b> ${data.info.email}</p>
+                                <p><b>Teléfono:</b> ${data.info.numeroT}</p>
+                                <hr>
+                                <h4>Productos</h4>
+                                ${htmlProductos}
+                                <h3 style="text-align:right; color: var(--primary);">Total: $${data.info.total}</h3>
+                                ${htmlPago}
+                            </div>
+                        `,
+                        width: '600px'
+                    });
+                });
+        }
+
+        mostrarSeccion('ordenes');
+    </script>
+</body>
+</html>

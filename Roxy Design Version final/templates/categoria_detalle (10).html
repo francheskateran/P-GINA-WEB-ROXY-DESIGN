@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>RoxyDesign - {{ nombre_categoria }}</title>
+    <style>
+        :root {
+            --primary: {{ site_config.color_principal | default('#2b8a78') }};
+            --bg: {{ site_config.color_fondo | default('#f4f4f4') }};
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            padding: 40px 20px;
+        }
+
+        .header-categoria {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-categoria h1 {
+            font-size: 36px;
+            color: #333;
+            border-bottom: 4px solid var(--primary);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        .grid-productos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .producto-container {
+            background: white;
+            display: flex;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .producto-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .producto-imagen {
+            width: 45%;
+            background: #fff;
+            padding: 15px;
+        }
+
+        .producto-imagen img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .producto-info {
+            width: 55%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .categoria-tag {
+            color: var(--primary);
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .precio {
+            font-size: 22px;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .stock-label {
+            font-size: 13px; color: #666; margin-bottom: 15px;
+            background: #eee; padding: 2px 8px; border-radius: 4px; display: inline-block; width: fit-content;
+        }
+
+        .btn-accion {
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-accion:hover {
+            filter: brightness(0.9);
+        }
+
+        .enlace-volver-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .enlace-volver {
+            text-decoration: none;
+            color: #999;
+            font-size: 16px;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .enlace-volver:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .producto-container { flex-direction: column; }
+            .producto-imagen, .producto-info { width: 100%; }
+            .grid-productos { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-categoria">
+        <h1>{{ nombre_categoria }}</h1>
+        <p>Explora nuestra selección exclusiva de esta categoría</p>
+    </div>
+
+    <div class="grid-productos">
+        {% for p in productos %}
+        <div class="producto-container">
+            <div class="producto-imagen">
+                <img src="{{ url_for('static', filename='img/' + (p.imagen_url if p.imagen_url else 'default.png')) }}" 
+                     onerror="this.src='https://via.placeholder.com/300x400?text=RoxyDesign'" 
+                     alt="{{ p.NombreP }}">
+            </div>
+
+            <div class="producto-info">
+                <span class="categoria-tag">RoxyDesign Collection</span>
+                <h2>{{ p.NombreP }}</h2>
+                <span class="stock-label">Disponibles: {{ p.stock }}</span>
+                <p class="precio">$ {{ p.Precio }}</p>
+
+                <form action="{{ url_for('agregar_al_carrito', producto_id=p.idP) }}" method="POST">
+                    <button type="submit" class="btn-accion" style="width: 100%;">Añadir al carrito</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <p style="color: #666; font-size: 18px;">No hay productos disponibles en esta categoría actualmente.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="enlace-volver-container">
+        <a href="{{ url_for('inicio') }}" class="enlace-volver">
+            ← Volver al catálogo principal
+        </a>
+    </div>
+
+</body>
+</html>
