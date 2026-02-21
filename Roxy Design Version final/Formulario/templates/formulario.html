@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RoxyDesign</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='formulario.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <a href="/" class="volver-icono">
+        <ion-icon name="arrow-back-outline"></ion-icon> Volver
+    </a>
+
+    <div class="container" id="container">
+
+        <div class="container-form">
+            <form class="sign-in" action="/login" method="POST">
+                <h2>Iniciar Sesión</h2>
+                <div class="social-networks">
+                    <ion-icon name="logo-facebook"></ion-icon>
+                    <ion-icon name="logo-twitter"></ion-icon>
+                    <ion-icon name="logo-instagram"></ion-icon>
+                    <ion-icon name="logo-tiktok"></ion-icon>
+                </div>
+                <span>Use su correo y contraseña</span>
+                <div class="container-input">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" name="email_login" placeholder="Email" required />
+                </div>
+                <div class="container-input">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" name="password_login" placeholder="contraseña" required />
+                </div>
+                <a href="javascript:void(0)" onclick="recuperarPassword()">¿Olvidaste tu contraseña?</a>
+                <button type="submit" class="button">Iniciar Sesión</button>
+            </form>
+        </div>
+
+        <div class="container-form">
+            <form class="sign-up" action="/registrar" method="POST">
+                <h2>Registrarse</h2>
+                <div class="social-networks">
+                    <ion-icon name="logo-facebook"></ion-icon>
+                    <ion-icon name="logo-twitter"></ion-icon>
+                    <ion-icon name="logo-instagram"></ion-icon>
+                    <ion-icon name="logo-tiktok"></ion-icon>
+                </div>
+                <span>Use su correo electrónico para registrarse</span>
+                <div class="container-input">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <input type="text" name="Nombre" placeholder="Nombre" required />
+                </div>
+                <div class="container-input">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" name="email" placeholder="Email" required />
+                </div>
+                <div class="container-input">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" name="contraseña" placeholder="contraseña" required />
+                </div>
+                <button type="submit" class="button">Registrarse</button>
+            </form>
+        </div>
+
+        <div class="container-welcome">
+            <div class="welcome-sign-up welcome">
+                <h3>¡Bienvenido!</h3>
+                <p>Ingrese sus datos personales para usar todas las funciones del sitio</p>
+                <button class="button" id="btn-sign-up">Registrarse</button>
+            </div>
+            <div class="welcome-sign-in welcome">
+                <h3>¡Hola!</h3>
+                <p>Regístrese con sus datos personales para usar todas las funciones del sitio</p>
+                <button class="button" id="btn-sign-in">Iniciar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='formulario.js') }}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script>
+        async function recuperarPassword() {
+            const { value: email } = await Swal.fire({
+                title: 'Paso 1: Correo',
+                text: 'Ingresa tu correo electrónico registrado',
+                input: 'email',
+                inputPlaceholder: 'tu-correo@ejemplo.com',
+                showCancelButton: true,
+                confirmButtonText: 'Siguiente',
+                confirmButtonColor: '#fe0123',
+                background: '#1a1a1a',
+                color: '#ffffff'
+            });
+
+            if (email) {
+                const { value: nombre } = await Swal.fire({
+                    title: 'Paso 2: Validación',
+                    text: 'Ingresa tu nombre de usuario para confirmar tu identidad',
+                    input: 'text',
+                    inputPlaceholder: 'Tu nombre registrado',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ver Contraseña',
+                    confirmButtonColor: '#fe0123',
+                    background: '#1a1a1a',
+                    color: '#ffffff'
+                });
+
+                if (nombre) {
+                    fetch('/recuperar', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `email=${encodeURIComponent(email)}&nombre=${encodeURIComponent(nombre)}`
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        const partes = data.split('|');
+                        const esExito = partes[0] === "OK";
+
+                        Swal.fire({
+                            title: esExito ? '¡Confirmado!' : 'Atención',
+                            text: partes[1] || data,
+                            icon: esExito ? 'success' : 'error',
+                            confirmButtonColor: '#fe0123',
+                            background: '#1a1a1a',
+                            color: '#ffffff'
+                        });
+                    });
+                }
+            }
+        }
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Swal.fire({
+                        title: '{{ "¡Éxito!" if category == "success" else "Atención" }}',
+                        text: '{{ message }}',
+                        icon: '{{ category }}',
+                        confirmButtonColor: '#fe0123'
+                    });
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </script>
+</body>
+</html>

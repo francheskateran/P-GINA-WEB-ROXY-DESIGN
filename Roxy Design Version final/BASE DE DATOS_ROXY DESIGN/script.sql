@@ -1,0 +1,65 @@
+CREATE SCHEMA IF NOT EXISTS ROXYDESING;
+USE ROXYDESING;
+CREATE TABLE usuario (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(255) UNIQUE NOT NULL,
+  contraseña VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  numeroT VARCHAR(20),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE productos (
+  idP BIGINT AUTO_INCREMENT PRIMARY KEY,
+  NombreP VARCHAR(255) NOT NULL,
+  peso DECIMAL(10, 2) NOT NULL,
+  tipo VARCHAR(255) NOT NULL,
+  Precio DECIMAL(10, 2) NOT NULL,
+  imagen_url VARCHAR(255)
+);
+
+CREATE TABLE carrito (
+  idC BIGINT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
+);
+
+CREATE TABLE carrito_productos (
+  idCP BIGINT AUTO_INCREMENT PRIMARY KEY,
+  carrito_id BIGINT,
+  productos_id BIGINT,
+  cantidad INT NOT NULL DEFAULT 1,
+  FOREIGN KEY (carrito_id) REFERENCES carrito(idC) ON DELETE CASCADE,
+  FOREIGN KEY (productos_id) REFERENCES productos(idP)
+);
+
+CREATE TABLE orden (
+  idO BIGINT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT,
+  carrito_id BIGINT,
+  status ENUM('Pendiente', 'Confirmado', 'Cancelado') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+  FOREIGN KEY (carrito_id) REFERENCES carrito(idC)
+);
+
+CREATE TABLE pagos (
+  idPS BIGINT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT,
+  orden_id BIGINT,
+  Numero_Telefono VARCHAR(20) NOT NULL,
+  id_Numero VARCHAR(20) NOT NULL,
+  bank_name VARCHAR(255) NOT NULL,
+  Referencia_pago VARCHAR(255) NOT NULL,
+  pago_imagen_url VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+  FOREIGN KEY (orden_id) REFERENCES orden(idO)
+);
+
+CREATE TABLE dueño (
+  idD BIGINT AUTO_INCREMENT PRIMARY KEY,
+  usuario VARCHAR(255) UNIQUE NOT NULL,
+  contraseña VARCHAR(255) NOT NULL
+);
